@@ -20,7 +20,10 @@ router.get("/retrieve-live-trades-sheet/:_id", (req, res) => {
   userData
     .findById(req.params._id)
     .then(data => {
-      res.status(200).json(data);
+      const payload = data;
+      console.log("data['liveTradesSheet'] is", data['liveTradesSheet']);
+      // console.log('typeof(data)', typeof(data));
+      res.status(200).json(payload);
     })
     .catch(err => {
       res.status(400).json(err);
@@ -36,6 +39,18 @@ router.put("/update-live-trades-sheet/:_id", (req, res) => {
     return res.status(200).json(data);
   });
 });
+
+
+router.put("/refresh/:_id", (req, res) => {
+  const field = { _id: req.params._id };
+  const data = { $set: { liveTradesSheet: req.body } };
+  userData.findByIdAndUpdate(field, data, { new: true }, (err, data) => {
+    if (err) return res.status(500).send(err);
+    return res.status(200).json(data);
+  });
+});
+
+
 
 // DELETE
 router.delete("/delete-live-trades-sheet/:_id", (req, res) => {

@@ -1,6 +1,9 @@
 import React, { Component } from "react";
 import { BrowserRouter as Router, Route } from "react-router-dom";
 
+import PropTypes from 'prop-types';
+import {connect} from 'react-redux';
+
 import TickersSelector from "./TickersSelector";
 import MethodSelector from "./MethodSelector";
 import TickersTableBuy from "./TickersTableBuy";
@@ -11,7 +14,8 @@ class Tickers extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      ticker: "BTC"
+      ticker: "BTC",
+      uid: ''
     };
     this.onTickerChange = this.onTickerChange.bind(this);
     this.refMethod = this.refMethod.bind(this);
@@ -23,11 +27,12 @@ class Tickers extends Component {
   }
 
   onTickerSelectorSubmit() {
-    this.refMethod();
+    const uid = this.props.auth.user.id;
+    this.refMethod(uid);
   }
 
-  refMethod() {
-    this.child.current.renderTable();
+  refMethod(uid) {
+    this.child.current.renderTable(uid);
   }
 
   render() {
@@ -65,4 +70,17 @@ class Tickers extends Component {
   }
 }
 
-export default Tickers;
+// export default Tickers;
+
+
+Tickers.propTypes = {
+  auth: PropTypes.object.isRequired,
+  errors: PropTypes.object.isRequired
+}
+
+const mapStateToProps = state => ({
+  auth: state.auth,
+  errors: state.errors
+});
+
+export default connect(mapStateToProps)(Tickers);

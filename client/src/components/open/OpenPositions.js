@@ -1,17 +1,21 @@
 import React, { Component } from "react";
 import BootstrapTable from "react-bootstrap-table-next";
+import PropTypes from 'prop-types';
+import {connect} from 'react-redux';
 
 const axios = require("axios");
 
 
 class OpenPositions extends Component {
   state = {
-    openPositionsData: []
+    openPositionsData: [],
+    uid: ''
   };
 
 
   componentDidMount() {
-    const uid = "5c1ad058ab6bf5413f08896e";
+    const uid = this.props.auth.user.id;
+    this.setState({uid: uid})
     axios.get("http://localhost:4000/api/liveTradesSheet/retrieve-live-trades-sheet/" + uid)
       .then(res => { this.setState(  { openPositionsData: res.data.liveTradesSheet })})
       .catch(error => {console.log({'error': error});});
@@ -106,4 +110,17 @@ class OpenPositions extends Component {
   }
 }
 
-export default OpenPositions;
+// export default OpenPositions;
+
+
+OpenPositions.propTypes = {
+  auth: PropTypes.object.isRequired,
+  errors: PropTypes.object.isRequired
+}
+
+const mapStateToProps = state => ({
+  auth: state.auth,
+  errors: state.errors
+});
+
+export default connect(mapStateToProps)(OpenPositions);

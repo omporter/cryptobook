@@ -1,5 +1,8 @@
 import React, { Component } from "react";
 
+import PropTypes from 'prop-types';
+import {connect} from 'react-redux';
+
 import BootstrapTable from "react-bootstrap-table-next";
 
 const axios = require("axios");
@@ -8,14 +11,17 @@ class Portfolio extends Component {
   constructor() {
     super();
     this.state = {
-      uid: "5c1ad058ab6bf5413f08896e",
+      uid: "",
       portfolioData: []
     };
   }
 
   componentDidMount() {
+    const uid = this.props.auth.user.id;
+    this.setState({uid: uid});
+
     axios
-      .get("http://localhost:4000/api/portfolioSheet/retrieve-portfolio-sheet/" + this.state.uid)
+      .get("http://localhost:4000/api/portfolioSheet/retrieve-portfolio-sheet/" + uid)
       .then(res => {this.setState({ portfolioData: res.data.portfolioSheet[0] });
       })
       .catch(error => {
@@ -71,4 +77,14 @@ class Portfolio extends Component {
   }
 }
 
-export default Portfolio;
+Portfolio.propTypes = {
+  auth: PropTypes.object.isRequired,
+  errors: PropTypes.object.isRequired
+}
+
+const mapStateToProps = state => ({
+  auth: state.auth,
+  errors: state.errors
+});
+
+export default connect(mapStateToProps)(Portfolio);

@@ -1,8 +1,7 @@
 import React, { Component } from "react";
-import axios from "axios";
 import PropTypes from 'prop-types';
 import {connect} from 'react-redux';
-import classnames from 'classnames';
+// import classnames from 'classnames';
 import {loginUser} from '../../actions/authActions';
 
 
@@ -18,7 +17,7 @@ class Login extends Component {
   }
 
   componentDidMount () { // cannot go to '/login' or '/register' if logged in already 
-    if (this.props.auth.isAuthenticated) {
+  if (this.props.auth.isAuthenticated) {
       this.props.history.push('/dashboard');
     }
   }
@@ -53,7 +52,7 @@ class Login extends Component {
   };
 
   render() {
-    const {errors} = this.state; 
+    // const {errors} = this.state; 
 
 
 

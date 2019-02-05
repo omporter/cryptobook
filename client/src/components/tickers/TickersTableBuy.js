@@ -1,15 +1,23 @@
 import React, { Component } from "react";
 import BootstrapTable from "react-bootstrap-table-next";
 
+// import PropTypes from 'prop-types';
+// import {connect} from 'react-redux';
+
 const axios = require("axios");
 
 class TickersTableBuy extends Component {
   state = {
-    tickersData: []
+    tickersData: [],
+    uuid: ''
   };
 
-  renderTable() {
-      const uid = "5c1ad058ab6bf5413f08896e";
+  // componentDidMount () {
+  //   this.setState({uid: this.props.auth.user.id})
+  // }
+
+  renderTable(uid) {
+      // const uid = '';
       axios
         .get(
           "http://localhost:4000/api/tickersSheet/retrieve-tickers-sheet/" +
@@ -93,4 +101,16 @@ class TickersTableBuy extends Component {
   }
 }
 
-export default TickersTableBuy;
+// TickersTableBuy.propTypes = {
+//   auth: PropTypes.object.isRequired,
+//   errors: PropTypes.object.isRequired
+// }
+
+// const mapStateToProps = state => ({
+//   auth: state.auth,
+//   errors: state.errors
+// });
+
+// export default connect(mapStateToProps)(TickersTableBuy);
+
+export default TickersTableBuy

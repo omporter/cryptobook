@@ -1,6 +1,10 @@
 import React, { Component } from "react";
 import axios from "axios";
 
+import PropTypes from 'prop-types';
+import {connect} from 'react-redux';
+// import classnames from 'classnames';
+
 
 class AddTrade extends Component {
   constructor() {
@@ -16,17 +20,22 @@ class AddTrade extends Component {
       priceBtc: "",
       priceUsd: "",
       exchange: "",
-      notes: ""
+      notes: "",
+      uid: ''
     };
     this.onChange = this.onChange.bind(this);
     this.onTickerChange = this.onChange.bind(this);
     this.onButtonPressBuy = this.onButtonPressBuy.bind(this);
   }
 
+  componentDidMount () {
+    this.setState({uid: this.props.auth.user.id})
+  }
+
   onButtonPressBuy = e => {
     e.preventDefault();
     this.setState({ buttonVal: "Buy" });
-    this.refreshPortfolioSheet();
+    // this.refreshPortfolioSheet();
   };
 
   onButtonPressSell = e => {
@@ -54,7 +63,7 @@ class AddTrade extends Component {
 
 
   refreshPortfolioSheet = e => {
-    const uid = "5c1ad058ab6bf5413f08896e";
+    const uid = this.state.uid;
     let portfolioSheetData = []; // defining it in global scope
     console.log('Setting portfolioSheetData to []')
     // fetch latest data from live trades sheet
@@ -71,16 +80,7 @@ class AddTrade extends Component {
             console.log("portfolio sheet succesfully deleted, res2 is", res2);
             const liveTradesSheet = res1.data.liveTradesSheet;
             console.log('initialising template for each ticker');
-            let template = {
-              ticker: "",
-              token: "",
-              holdings: 0,
-              priceBtc: 0,
-              priceUsd: 0,
-              totalBtc: 0,
-              totalUsd: 0,
-              percentOfTotalPortfolio: 0
-            };
+            let template = {};
             console.log('running loop to append each object to array of data');
             for (const i of liveTradesSheet) {
               if (i["Ticker"] !== "") {
@@ -113,6 +113,7 @@ class AddTrade extends Component {
   
 
   onSubmit = e => {
+    console.log('this.state on first line on onSubmit', this.state);
     e.preventDefault();
 
     // Fetch live prices for ticker
@@ -125,7 +126,7 @@ class AddTrade extends Component {
 
 
     // Step1: Add Ticker Form to Tickers Sheet
-    const uid = "5c1ad058ab6bf5413f08896e";
+    const uid = this.state.uid;
      url = "http://localhost:4000/api/tickersSheet/retrieve-tickers-sheet/" + uid;
     axios.get(url)
       .then(res1 => {
@@ -141,13 +142,15 @@ class AddTrade extends Component {
           notes: this.state.notes
         };
         // set price to live price if no price is entered 
-        if (Number(this.state.priceBtc) === 0) {
-          tickerData['priceBtc'] = this.state.wrapperPriceBtc;
+        if (Number(this.state.priceBtc) === 0) { // Number of empty string is 0 in js. 
+          let setPriceBtcIfEmptyString = tickerData['priceBtc'] = this.state.wrapperPriceBtc;
+          this.setState({priceBtc: setPriceBtcIfEmptyString});
         } else {
           tickerData['priceBtc'] =  this.state.priceBtc;
         }
         if (Number(this.state.priceUsd) === 0) {
-          tickerData['priceUsd'] = this.state.wrapperPriceUsd;
+          let setPriceUsdIfEmptyString = tickerData['priceUsd'] = this.state.wrapperPriceUsd;
+          this.setState({priceUsd: setPriceUsdIfEmptyString});
         } else {
           tickerData['priceUsd'] =  this.state.priceUsd;
         }
@@ -203,7 +206,6 @@ class AddTrade extends Component {
         };
         let location = this.state.ticker + "Buy";
         let tickerHistory = res1.data[location];
-        console.log("tickerHistory is", tickerHistory);
         if (tickerHistory === undefined) { // if first time adding ticker, must manually use original tickerData variable from step 1.
           console.log("tickerHistory reassigned to original tickerData object");
           tickerHistory = [];
@@ -233,9 +235,11 @@ class AddTrade extends Component {
 
         // liveSheetsData["mostRecentBuyDate"] = Math.max.apply(Math, mostRecentBuyDate); // where largest is most recent
         let isNewTickerInLiveTradesAlready = false; // if new just push, else must delete existing record then create new one
-        for (const i of res1.data.liveTradesSheet) {
-          if (i["Ticker"] === this.state.ticker) {
-            isNewTickerInLiveTradesAlready = true;
+        if (!(res1.data.liveTradesSheet === undefined)) {
+          for (const i of res1.data.liveTradesSheet) {
+            if (i["Ticker"] === this.state.ticker) {
+              isNewTickerInLiveTradesAlready = true;
+            }
           }
         }
         if (isNewTickerInLiveTradesAlready === false) { // just push to live trades sheet
@@ -248,15 +252,14 @@ class AddTrade extends Component {
           // if ticker exists already, must delete existing instance and create new one
           console.log("Ticker Already Exists. Deleting Existing Record of Ticker in Live Trades Then Updating.");
           const localMethod = this.state.ticker + "Buy";
-          console.log("Data to Manipulate from Database is",res1.data[localMethod]);
           // step2.1: delete existing record.
           url ="http://localhost:4000/api/liveTradesSheet/delete-live-trades-sheet/" + uid + "/" + this.state.ticker;
           axios.patch(url)
             .then(res4 => {
               let mostRecentBuyDate = []; // make array of buy dates so we can find the largest (most recent one)
               let updatedAmount = liveSheetsData["Amount"]  = historicAmountsTotal + Number(this.state.amount);
-              let updatedTotalCostBtc = liveSheetsData["totalCostBtc"] = totalCostBtc + (updatedAmount * this.state.priceBtc);
-              let updatedTotalCostUsd = liveSheetsData["totalCostUsd"] = totalCostUsd + (updatedAmount * this.state.priceUsd);
+              let updatedTotalCostBtc = liveSheetsData["totalCostBtc"] = totalCostBtc + (Number(this.state.amount) * this.state.priceBtc);
+              let updatedTotalCostUsd = liveSheetsData["totalCostUsd"] = totalCostUsd + (Number(this.state.amount) * this.state.priceUsd);
               liveSheetsData["averageBuyPriceBtc"] = updatedTotalCostBtc / updatedAmount;
               liveSheetsData["averageBuyPriceUsd"] = updatedTotalCostUsd / updatedAmount;
               let liveValueBtc = liveSheetsData["LiveValueBtc"] = updatedAmount * Number(this.state.wrapperPriceBtc);
@@ -283,6 +286,7 @@ class AddTrade extends Component {
   render() {
     return (
       <div>
+
         <button
           type="button"
           className="btn btn-outline-success btn-lg"
@@ -394,4 +398,14 @@ class AddTrade extends Component {
   }
 }
 
-export default AddTrade;
+AddTrade.propTypes = {
+  auth: PropTypes.object.isRequired,
+  errors: PropTypes.object.isRequired
+}
+
+const mapStateToProps = state => ({
+  auth: state.auth,
+  errors: state.errors
+});
+
+export default connect(mapStateToProps)(AddTrade);

@@ -16,4 +16,17 @@ router.get("/:ticker", (req, res) => {
   });
 });
 
+router.get("/multiple/:body", (req, res) => {
+  // documentation https://min-api.cryptocompare.com/documentation
+  const url = 'https://min-api.cryptocompare.com/data/pricemulti?fsyms=' + req.params.body +'&tsyms=USD,BTC';
+  rp(url).then(response => {
+    console.log('API call response:', response);
+    res.status(200).json(response);
+  }).catch((err) => {
+    console.log('API call error:', err.message);
+    res.status(400).json(err);
+  });
+});
+
+
 module.exports = router;

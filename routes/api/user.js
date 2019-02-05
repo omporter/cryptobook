@@ -27,7 +27,7 @@ router.post("/create-user", (req, res) => {
 router.post('/register', (req, res) => {
   const user = new UserData({
     _id: req.body.uid,
-    user: req.body.user
+    user: req.body.user,
   });
   user.save()
   .then (result => {
