@@ -24,36 +24,18 @@ class AddTrade extends Component {
     this.onChange = this.onChange.bind(this);
     this.onTickerChange = this.onChange.bind(this);
     this.onButtonPressBuy = this.onButtonPressBuy.bind(this);
-  };
+  }
 
-  // React Methods
-  componentDidMount () {
-    this.setState({uid: this.props.auth.user.id})
-  };
-  onChange = e => {
-    this.setState({ [e.target.name]: e.target.value });
-  };
+  fetchLiveTradesSheetData = e => {
+    const url = "http://localhost:4000/api/liveTradesSheet/retrieve-live-trades-sheet/" + this.state.uid;
+    return axios.get(url)
+  }
 
-  // State Methods
-  onButtonPressBuy = e => {
-    e.preventDefault();
-    this.setState({ buttonVal: "Buy" });
-  };
-  onButtonPressSell = e => {
-    e.preventDefault();
-    this.setState({ buttonVal: "Sell" });
-  };
-
-  // Wrapper Method
-  fetchLivePrice = (ticker) => {
-    return axios.get('http://localhost:4000/api/wrapper/' + ticker)
-  };
-
-  // Portfolio Sheet Methods
   deletePortfolioSheet = (e) => {
     const url = "http://localhost:4000/api/portfolioSheet/delete-portfolio-sheet/" + this.state.uid;
     return axios.patch(url)
-  };
+  }
+
   postPortfolioSheet = (res1, res2) => {
     const liveTradesSheet = res1.data.liveTradesSheet;
     let portfolioSheetData = [];
@@ -74,7 +56,8 @@ class AddTrade extends Component {
     }
     const url = "http://localhost:4000/api/portfolioSheet/update-portfolio-sheet/" + this.state.uid;
     return axios.put(url, portfolioSheetData)
-  };
+  }
+
   refreshPortfolioSheet = e => {
     this.fetchLiveTradesSheetData().then(res1 => {
         this.deletePortfolioSheet().then(res2 => {
@@ -85,163 +68,95 @@ class AddTrade extends Component {
       }).catch(err => console.log({ err: err }));
   };
 
-  // Tickers Sheets Buy/Sell Methods
+
+  fetchLivePrice = (ticker) => {
+    return axios.get('http://localhost:4000/api/wrapper/' + ticker)
+  }
+
   fetchTickersSheet = (res0) => {
     const data = JSON.parse(res0.data);    
     this.setState({ wrapperPriceBtc: data['BTC'] });
     this.setState({ wrapperPriceUsd: data['USD'] });
     return axios.get("http://localhost:4000/api/tickersSheet/retrieve-tickers-sheet/" + this.state.uid)
-  };
-  addTickersMeta = (res1) => {
-    let url;
-    // create data object 
-    let tickerData = {
-      token: this.state.token,
-      ticker: this.state.ticker,
-      complete: false,
-      amount: this.state.amount,
-      date: Date.now(),
-      exchange: this.state.exchange,
-      targetSell: this.state.targetSell,
-      stopLoss: this.state.stopLoss,
-      notes: this.state.notes
-    };
-    // Set price to wrapper price if none entered
-    if (Number(this.state.priceBtc) === 0) { // Number of empty string is 0 in js.// 2.1 set price to live price if no price is entered 
-      let setPriceBtcIfEmptyString = tickerData['priceBtc'] = this.state.wrapperPriceBtc;
-      this.setState({priceBtc: setPriceBtcIfEmptyString});
-    } else {
-      tickerData['priceBtc'] =  this.state.priceBtc;
-    }
-    if (Number(this.state.priceUsd) === 0) {
-      let setPriceUsdIfEmptyString = tickerData['priceUsd'] = this.state.wrapperPriceUsd;
-      this.setState({priceUsd: setPriceUsdIfEmptyString});
-    } else {
-      tickerData['priceUsd'] =  this.state.priceUsd;
-    }
-    // generate totals
-    tickerData["totalBtc"] = tickerData["priceBtc"] * tickerData["amount"];         
-    tickerData["totalUsd"] = tickerData["priceUsd"] * tickerData["amount"];
-    // generate ids
-    let localPath = this.state.ticker + this.state.buttonVal;         
-    let localLength;
-    if (res1.data[localPath] === undefined) {
-      localLength = 0;
-    } else {
-      localLength = res1.data[localPath].length;
-    }
-    if (localLength === 0) {
-      if (this.state.buttonVal === 'Buy') {
-        tickerData["buyId"] = this.state.ticker + "Buy1";
-      } else if (this.state.buttonVal === 'Sell') {
-        tickerData["sellId"] = this.state.ticker + "Sell1";
-      }
-      tickerData["tradeId"] = this.state.ticker + "1";
-    } else {
-      if (this.state.buttonVal === 'Buy') {
-        tickerData["buyId"] = this.state.ticker + "Buy" + (localLength + 1);
-      } else if (this.state.buttonVal === 'Sell') {
-        tickerData["sellId"] = this.state.ticker + "Sell" + (localLength + 1);
-      }
-      tickerData["tradeId"] = this.state.ticker + (localLength + 1);
-    }
-    // generate commission vals
-    tickerData["commissionPercent"] = 1;         
-    tickerData["commissionCostBtc"] = 1;
-    tickerData["commissionCostUsd"] = 1;
-    // validation checks and post request 
-    if (this.state.tickerDataHasError === true) {           
-      console.log("error, tickerDataHaError is true. Please try again");
-    } else {
-      url = "http://localhost:4000/api/tickersSheet/update-tickers-sheet/" + this.state.ticker + this.state.buttonVal + "/" + this.state.uid;
-      axios.put(url, tickerData)
-        .then(res2 => {
-          console.log("Tickers Sheet for " + this.state.ticker + " in Synch",res2.data)        
-        })
-        .catch(err => console.log({ err: err }));
-    }
-    return tickerData
-  };
-  setMostRecentBuyToComplete = () => {
-
   }
 
-  // Tickers Sheets Match Methods
-  addMatch = (dbdata, tickerData) => {
-    const tickerMatchData = {
-        buyId: '',
-        sellId: tickerData['sellId'],
-        matchId: this.nextMatchId(dbdata),
-        completed: tickerData['complete'],
-        inCompletedTrades: false,
-        amount: tickerData['amount'],
-        priceBtc: tickerData['priceBtc'],
-        priceUsd: tickerData['priceUsd'],
-        totalBtc: tickerData['totalBtc'],
-        totalUsd: tickerData['totalUsd'],
-        date: Date.now(),
-        exchange: tickerData['exchange'],
-        notes : tickerData['notes']
-      };
-    const url = "http://localhost:4000/api/tickersSheet/update-tickers-sheet/" + this.state.ticker + 'Match' + "/" + this.state.uid;
-    return axios.put(url, tickerMatchData)
-  };
-  nextMatchId = (dbdata, tickerData) => {
-    let location = this.state.ticker + 'Sell';
-    if(dbdata.data[location] === undefined) {
-      return 'temp1';
-    } else {
-      const tempArray = [];
-      location = this.state.ticker + 'Match';
-      for (const i of dbdata.data[location]){
-        if (i['complete'] !== true) {
-          const a = i['matchId']
-          const b = a.slice(-1);
-          tempArray.push(Number(b));
-        }
-      }
-      const max = (Math.max(...tempArray)) + 1;
-      return 'temp' + max;
-    }
 
-  }
-  getArrayOfBuyIdsByDateAdded = (dbdata) => {
-    // We can assume the lower the Buy Id number, the earlier the date. 
-    // However if we add 'Add Trade by Past Date' functionality, this code will need to be refactored. 
-    const arrayOfBuyIds= [];
-    const location = this.state.ticker + 'Buy';
-    const tickerBuys = dbdata.data[location];
-    for (const i of tickerBuys) {
-      if (i['complete'] !== true) {
-        arrayOfBuyIds.push(i['buyId'])
-      }
-    }
-    return arrayOfBuyIds.reverse();
-  }
-  getMostRecentBuyAmount = (dbdata) => {
-    let mostRecentBuyAmount;
-    const arrayOfBuyIdsByMostRecentlyAdded = this.getArrayOfBuyIdsByDateAdded(dbdata)
-    const location = this.state.ticker + 'Buy'
-    for (const i of dbdata.data[location]){
-      if (i['buyId'] === arrayOfBuyIdsByMostRecentlyAdded[0]) {
-        mostRecentBuyAmount = i['amount'];
-      }
-    }
-    return mostRecentBuyAmount;
-  }
-  vacuumTemps = (dbdata, tickerData) => {
-    console.log('vacuumTemps called');
+  addSellMeta = (e) => {
+    
   }
 
-  // Live Sheets Methods
-  fetchLiveTradesSheetData = e => {
-    const url = "http://localhost:4000/api/liveTradesSheet/retrieve-live-trades-sheet/" + this.state.uid;
-    return axios.get(url)
-  };
-  liveTradesMeta = (res1, tickerData) => {
+
+
+
+  
+
+  onSubmit = e => {
     let url;
     const uid = this.state.uid;
-    const liveSheetsData = {
+    e.preventDefault();
+    this.fetchLivePrice(this.state.ticker).then(res0 => {
+      this.fetchTickersSheet(res0).then(res1 => {        
+        let tickerData = {
+          token: this.state.token,
+          ticker: this.state.ticker,
+          complete: false,
+          amount: this.state.amount,
+          date: Date.now(),
+          exchange: this.state.exchange,
+          targetSell: this.state.targetSell,
+          stopLoss: this.state.stopLoss,
+          notes: this.state.notes
+        };
+        if (Number(this.state.priceBtc) === 0) { // Number of empty string is 0 in js.// 2.1 set price to live price if no price is entered 
+          let setPriceBtcIfEmptyString = tickerData['priceBtc'] = this.state.wrapperPriceBtc;
+          this.setState({priceBtc: setPriceBtcIfEmptyString});
+        } else {
+          tickerData['priceBtc'] =  this.state.priceBtc;
+        }
+        if (Number(this.state.priceUsd) === 0) {
+          let setPriceUsdIfEmptyString = tickerData['priceUsd'] = this.state.wrapperPriceUsd;
+          this.setState({priceUsd: setPriceUsdIfEmptyString});
+        } else {
+          tickerData['priceUsd'] =  this.state.priceUsd;
+        }
+        tickerData["totalBtc"] = tickerData["priceBtc"] * tickerData["amount"];         // 2.2 generate totals
+        tickerData["totalUsd"] = tickerData["priceUsd"] * tickerData["amount"];
+        let localPath = this.state.ticker + this.state.buttonVal;         // generate ids
+        let localLength;
+        if (res1.data[localPath] === undefined) {
+          localLength = 0;
+        } else {
+          localLength = res1.data[localPath].length;
+        }
+        if (localLength === 0) {
+          tickerData["buyId"] = this.state.ticker + "Buy1";
+          tickerData["tradeId"] = this.state.ticker + "1";
+        } else {
+          tickerData["buyId"] = this.state.ticker + "Buy" + (localLength + 1);
+          tickerData["tradeId"] = this.state.ticker + (localLength + 1);
+        }
+        tickerData["commissionPercent"] = 1;         // generate commission vals
+        tickerData["commissionCostBtc"] = 1;
+        tickerData["commissionCostUsd"] = 1;
+        const ticker = this.state.ticker;
+        const method = this.state.buttonVal;
+        if (this.state.tickerDataHasError === true) {           // validation checks
+          console.log("error, tickerDataHaError is true. Please try again");
+        } else {
+          url = "http://localhost:4000/api/tickersSheet/update-tickers-sheet/" + ticker + method + "/" + uid;
+          axios.put(url, tickerData)
+            .then(res2 => console.log("Tickers Sheet for " + ticker + " in Synch",res2.data))
+            .catch(err => console.log({ err: err }));
+        }
+
+
+
+
+
+        if(this.state.buttonVal === 'Sell') {
+          this.addSellMeta()
+        } else if (this.state.buttonVal === 'Buy') {
+          const liveSheetsData = {
             Ticker: this.state.ticker,
             Token: this.state.token,
             LivePriceBtc: Number(this.state.wrapperPriceBtc),
@@ -327,67 +242,6 @@ class AddTrade extends Component {
               .catch(err => console.log({ err: err }));
              }
 
-  };
-
- // Meta Methods: 
-  sellMeta = (dbdata, tickerData) => {
-
-    // Step 1: Add to Tickers Sheet under Match
-    this.addMatch(dbdata, tickerData).then(() => {
-
-
-      // Step 2: Get Most Recent Buy, and Current Sell Amounts 
-      const mostRecentBuyAmount = this.getMostRecentBuyAmount(dbdata);
-      const sellAmount = tickerData['amount'];
-
-
-      // Step 3: Run Matching Logic 
-      if (sellAmount < mostRecentBuyAmount) {
-        this.vacuumTemps(dbdata, tickerData)
-
-
-      } else if (sellAmount === mostRecentBuyAmount){
-        this.setMostRecentBuyToComplete().then(() => {
-          this.setTickerMatchToComplete().then(() => {
-          }).catch(err => console.log(err));
-        }).catch(err => console.log(err));
-
-
-      } else if (sellAmount > mostRecentBuyAmount) {
-
-
-      } else {
-        console.log('Error, sellAmount or mostRecentBuyAmount are not numbers')
-      }
-
-
-      // Step 4: Compile Completed Trades 
-                  // For this.state.ticker, for any trade that is {complete: true} && {inCompletedTrades: false}:
-                      // (i) Add that trade to completed trades sheet,
-                      // (ii) Set status of match trade to {inCompletedTrades: true}
-
-      
-      // Step 5: Update Live Trades
-                    // Update with (now removed) ticker buys that are {complete: true} 
-
-
-    }).catch(addMatchErr => console.log(addMatchErr));
-  };
-
-// User Action Methods
-  onSubmit = e => {
-    e.preventDefault();
-    // Step 1: Fetch Live Prices from Wrapper for use in (i) Live Trades Unrealised P/L, and (ii) In Event of No Price Entered in Form. 
-    this.fetchLivePrice(this.state.ticker).then(res0 => {
-      // Step 2: Fetch Current Data for Entered Ticker in the DB 
-      this.fetchTickersSheet(res0).then(res1 => {  
-        // Step 3: With that data, Add to Tickers Sheet (works for both buy and sell trades)  
-        const tickerData = this.addTickersMeta(res1);
-        // Step 4: Run Buy and Sell Logic 
-        if(this.state.buttonVal === 'Sell') {
-          this.sellMeta(res1, tickerData)
-        } else if (this.state.buttonVal === 'Buy') {
-          this.liveTradesMeta(res1, tickerData)
         } else {
           console.log('Oops, button is neither buy or sell');
         }
@@ -397,7 +251,33 @@ class AddTrade extends Component {
     .catch(err => console.log({err: err})); 
   };
 
-// Render Method
+
+
+
+  componentDidMount () {
+    this.setState({uid: this.props.auth.user.id})
+  }
+
+  onButtonPressBuy = e => {
+    e.preventDefault();
+    this.setState({ buttonVal: "Buy" });
+    this.refreshPortfolioSheet();
+  };
+
+  onButtonPressSell = e => {
+    e.preventDefault();
+    this.setState({ buttonVal: "Sell" });
+  };
+
+  onChange = e => {
+    this.setState({ [e.target.name]: e.target.value });
+  };
+
+
+
+
+
+
   render() {
     return (
       <div>

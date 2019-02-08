@@ -4,13 +4,29 @@ import axios from "axios";
 import PropTypes from "prop-types";
 import { connect } from "react-redux";
 
+import PieChart from './piechart';
+import Pie from "./piechart";
+
+
 class Dashboard extends Component {
   state = {
     uid: ""
+
   };
 
   componentDidMount() {
     this.setState({ uid: this.props.auth.user.id });
+  }
+
+  testMethod = (e) => {
+    this.secondMethod()
+    .then(res => console.log('success', res.data))
+    .catch(err => console.log(err))
+  }
+
+  secondMethod = (e) => {
+    const url = 'http://localhost:4000/api/users/'
+    return axios.get(url)
   }
 
   refreshPrices = e => {
@@ -65,7 +81,7 @@ class Dashboard extends Component {
             axios
               .put(url, updatedTotalSheet)
               .then(res3 => {
-                // Step 5: Refresh portfolio sheet from now updated live trades sheet. 
+                // Step 5: Refresh portfolio sheet from (now updated) live trades sheet. 
                 const uid = this.state.uid;
                 let portfolioSheetData = []; // defining it in global scope
                 let url = "http://localhost:4000/api/liveTradesSheet/retrieve-live-trades-sheet/" + uid;
@@ -119,6 +135,18 @@ class Dashboard extends Component {
         >
           Refresh Prices
         </button>
+
+        <button
+          type="button"
+          className="btn btn-outline-success btn-lg"
+          onClick={this.testMethod}
+        >
+          Test Button
+        </button>
+
+
+
+        <Pie></Pie>
       </div>
     );
   }
