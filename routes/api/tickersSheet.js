@@ -5,7 +5,6 @@ const mongoose = require("mongoose");
 const keys = require("../../config/keys");
 const userData = require("../../models/UserData");
 
-
 // create
 // router.post("/create-tickers-sheet/:ticker/:_id", (req, res) => {
 //   userData
@@ -47,8 +46,7 @@ const userData = require("../../models/UserData");
 //     });
 // });
 
-
-// RETRIEVE 
+// RETRIEVE
 
 router.get("/retrieve-tickers-sheet/:_id/", (req, res) => {
   userData
@@ -61,19 +59,47 @@ router.get("/retrieve-tickers-sheet/:_id/", (req, res) => {
     });
 });
 
-
-
-
-
-// UPDATE 
-router.put('/update-tickers-sheet/:document/:_id', (req, res) => {
-  const field = {_id: req.params._id}
-  const data = {$push: {[req.params.document]: req.body}}
-  userData.findByIdAndUpdate(field, data, {new: true}, (err, data) => {
-    if(err) return res.status(500).send(err)
+// UPDATE
+router.put("/update-tickers-sheet/:document/:_id", (req, res) => {
+  const field = { _id: req.params._id };
+  const data = { $push: { [req.params.document]: req.body } };
+  userData.findByIdAndUpdate(field, data, { new: true }, (err, data) => {
+    if (err) return res.status(500).send(err);
     return res.status(200).json(data);
-  })
+  });
 });
+
+
+// remove single document by buy id
+router.patch("/removeBuyById/:_id/:location/:buyid", (req, res) => {
+  const a = req.params.location; // BTCBuy
+  const b = "buyId";
+  const d = req.params.buyid; // BTCBuy2
+  const field = { _id: req.params._id };
+  const data = { $pull: { [a] : { [b]: d } } };
+  userData.findByIdAndUpdate(field, data, (err, data) => {
+    if (err) return res.status(500).send(err);
+    return res.status(200).json(data);
+  });
+});
+
+
+// remove single document by match id
+router.patch("/removeMatchById/:_id/:location/:matchid", (req, res) => {
+  const a = req.params.location; // BTCBuy
+  const b = "matchId";
+  const d = req.params.matchid; // BTCBuy2
+  const field = { _id: req.params._id };
+  const data = { $pull: { [a] : { [b]: d } } };
+  userData.findByIdAndUpdate(field, data, (err, data) => {
+    if (err) return res.status(500).send(err);
+    return res.status(200).json(data);
+  });
+});
+
+
+
+
 
 
 
@@ -119,7 +145,6 @@ router.put('/update-tickers-sheet/:document/:_id', (req, res) => {
 //           console.log('not found');
 //       }
 
-
 //     //   if (req.params.ticker) {
 //     //       console.log('req.params.ticker is:', req.params.ticker);
 //         // const dataToAdd = {
@@ -140,7 +165,6 @@ router.put('/update-tickers-sheet/:document/:_id', (req, res) => {
 //     });
 // });
 
-
 // DELETE
 
 router.post("/delete-tickers-sheets/:_id/:method", (req, res) => {
@@ -159,10 +183,3 @@ router.post("/delete-tickers-sheets/:_id/:method", (req, res) => {
 });
 
 module.exports = router;
-
-
-
-
-
-
-

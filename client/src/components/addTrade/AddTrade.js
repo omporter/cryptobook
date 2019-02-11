@@ -162,8 +162,80 @@ class AddTrade extends Component {
     }
     return tickerData
   };
-  setMostRecentBuyToComplete = () => {
+  setMostRecentBuyToComplete = (dbdata) => {
+    // Sets the buy trads field {complete: true}
+    // There is definitely a more efficient way to do this using mongo logic. Doing it manually for now to save time.
+    // Step 1: Get highest buyid 
+    const mostRecentBuyId = this.getArrayOfBuyIdsByDateAdded(dbdata)[0];
+    // Step 2: Create new object. 
+    const location = this.state.ticker + 'Buy';
+    const updatedData = dbdata.data[location]
+    const updatedObject = {};
+    for (const i of updatedData) {
+      if (i['buyId'] === mostRecentBuyId) {
+        updatedObject['ticker'] = i['ticker'];
+        updatedObject['complete'] = true;
+        updatedObject['amount'] = i['amount'];
+        updatedObject['date'] = i['date'];
+        updatedObject['exchange'] =  i['exchange'];
+        updatedObject['notes'] =  i['notes'];
+        updatedObject['priceBtc'] =  i['priceBtc'];
+        updatedObject['priceUsd'] =  i['priceUsd'];
+        updatedObject['totalBtc'] =  i['totalBtc'];
+        updatedObject['totalUsd'] =  i['totalUsd'];
+        updatedObject['buyId'] =  i['buyId'];
+        updatedObject['tradeId'] =  i['tradeId'];
+        updatedObject['commissionPercent'] =  i['commissionPercent'];
+        updatedObject['commissionCostBtc'] =  i['commissionCostBtc'];
+        updatedObject['commissionCostUsd'] =  i['commissionCostUsd']
+      }
+    }
+    console.log('object created');
+    // Step 2: Delete existing record. 
+    let url = 'http://localhost:4000/api/tickersSheet/removeBuyById/' + this.state.uid + '/' + this.state.ticker + 'Buy/' + mostRecentBuyId;
+    console.log('calling axios now')
+     axios.patch(url).then(() => {
+      console.log('axios succesfully called')
+      url = 'http://localhost:4000/api/tickersSheet/update-tickers-sheet/' + this.state.ticker + 'Buy/' + this.state.uid;
+      console.log('url is', url);
+      // Step 3: Post New object. 
+      return (axios.put(url, updatedObject));
+    }).catch(err => console.log({err:err})); 
+  }
+  closeMatchTrade = (dbdataUpdatedWithMatch, currentMatchId) => {
+    // Sets the match trades fields {completed: true} and {buyId: [corrospondingBuyId] }
+    // There is definitely a more efficient way to do this using mongo logic. Doing it manually for now to save time.
+    // Step 1: Get current match id, 
 
+    // Step 2: Create new object. 
+    const location = this.state.ticker + 'Match';
+    const updatedData = dbdataUpdatedWithMatch.data[location];
+    const updatedObject = {};
+    for (const i of updatedData) {
+      if (i['matchId'] === currentMatchId) {
+        updatedObject['buyId'] = this.getArrayOfBuyIdsByDateAdded(dbdataUpdatedWithMatch)[0];
+        updatedObject['completed'] = true;
+        updatedObject['sellId'] = i['sellId'];
+        updatedObject['matchId'] = i['matchId'];
+        updatedObject['inCompletedTrades'] =  i['inCompletedTrades'];
+        updatedObject['amount'] =  i['amount'];
+        updatedObject['priceBtc'] =  i['priceBtc'];
+        updatedObject['priceUsd'] =  i['priceUsd'];
+        updatedObject['totalBtc'] =  i['totalBtc'];
+        updatedObject['totalUsd'] =  i['totalUsd'];
+        updatedObject['date'] =  i['date'];
+        updatedObject['exchange'] =  i['exchange'];
+        updatedObject['notes'] =  i['notes'];
+      }
+    }
+    // Step 2: Delete existing record. 
+    let url = 'http://localhost:4000/api/tickersSheet/removeMatchById/' + this.state.uid + '/' + this.state.ticker + 'Match/' + currentMatchId;
+    axios.patch(url).then(() => {
+      url = 'http://localhost:4000/api/tickersSheet/update-tickers-sheet/' + this.state.ticker + 'Match/' + this.state.uid;
+      // Step 3: Post New object. 
+      console.log('up to here succesfully');
+      return axios.put(url, updatedObject)
+    }).catch(err => console.log({err:err})); 
   }
 
   // Tickers Sheets Match Methods
@@ -232,6 +304,17 @@ class AddTrade extends Component {
   vacuumTemps = (dbdata, tickerData) => {
     console.log('vacuumTemps called');
   }
+  getCurrentMatchId = (dbdataUpdatedWithMatch) => {
+    const location = this.state.ticker + 'Match';
+    const a = dbdataUpdatedWithMatch.data[location];
+    const b = [];
+    for (const i of a) {
+      b.push(i['matchId']);      
+    }
+    const result = b.slice(-1)[0] 
+    return result;
+  }
+
 
   // Live Sheets Methods
   fetchLiveTradesSheetData = e => {
@@ -329,46 +412,42 @@ class AddTrade extends Component {
 
   };
 
+  // Completed Trades Sheet Methods 
+  compileCompletedTrades = (dbdataUpdatedAll) => {
+      // For this.state.ticker, for any trade that is {complete: true} && {inCompletedTrades: false}:
+      // (i) Add that trade to completed trades sheet,
+      // (ii) Set status of match trade to {inCompletedTrades: true}
+      console.log('completd trades data', dbdataUpdatedAll);
+  }
+
  // Meta Methods: 
   sellMeta = (dbdata, tickerData) => {
 
     // Step 1: Add to Tickers Sheet under Match
-    this.addMatch(dbdata, tickerData).then(() => {
-
-
+    this.addMatch(dbdata, tickerData).then((dbdataUpdatedWithMatch) => {
       // Step 2: Get Most Recent Buy, and Current Sell Amounts 
       const mostRecentBuyAmount = this.getMostRecentBuyAmount(dbdata);
       const sellAmount = tickerData['amount'];
 
-
       // Step 3: Run Matching Logic 
       if (sellAmount < mostRecentBuyAmount) {
         this.vacuumTemps(dbdata, tickerData)
-
-
       } else if (sellAmount === mostRecentBuyAmount){
-        this.setMostRecentBuyToComplete().then(() => {
-          this.setTickerMatchToComplete().then(() => {
+        console.log('starting === condition');
+        this.setMostRecentBuyToComplete(dbdata).then((d) => {
+          console.log('most recent buy set to complete');
+          const currentMatchId = this.getCurrentMatchId(dbdataUpdatedWithMatch);
+          this.closeMatchTrade(dbdataUpdatedWithMatch, currentMatchId).then((dbdataUpdatedAll) => {
+            this.compileCompletedTrades(dbdataUpdatedAll)
           }).catch(err => console.log(err));
         }).catch(err => console.log(err));
-
-
       } else if (sellAmount > mostRecentBuyAmount) {
-
-
       } else {
         console.log('Error, sellAmount or mostRecentBuyAmount are not numbers')
       }
-
-
-      // Step 4: Compile Completed Trades 
-                  // For this.state.ticker, for any trade that is {complete: true} && {inCompletedTrades: false}:
-                      // (i) Add that trade to completed trades sheet,
-                      // (ii) Set status of match trade to {inCompletedTrades: true}
-
       
       // Step 5: Update Live Trades
-                    // Update with (now removed) ticker buys that are {complete: true} 
+      // Update with (now removed) ticker buys that are {complete: true} 
 
 
     }).catch(addMatchErr => console.log(addMatchErr));
