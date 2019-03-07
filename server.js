@@ -71,7 +71,8 @@ if(process.env.NODE_ENV === 'production') {
 }
 
 // server Config
-const port = 4000;
-app.listen(process.env.PORT || port, () => {
-  console.log(`Server Running on Port ${port}`);
+// const port = 4000;
+app.listen(process.env.PORT, () => {
+  // console.log(`Server Running on Port ${port}`);
+  console.log(`Server Running`);
 });
