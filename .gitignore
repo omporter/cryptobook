@@ -1,9 +1,9 @@
-\todo.txt
+/node_modules
+package-lock.json
+/config/keys/dev.js
 
-\config
+.vscode
 
-\node_modules
+.DS_Store
 
-\.vscode
-
-\.DS_Store
+todo.txt

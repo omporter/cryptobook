@@ -1,3 +1,6 @@
+// node imports
+const path  = require('path');
+
 // third party imports
 const express = require("express");
 const mongoose = require("mongoose");
@@ -55,6 +58,17 @@ app.use("/api/liveTradesSheet", liveTradesSheet);
 app.use("/api/completedTradesSheet", completedTradesSheet);
 app.use("/api/tickersSheet", tickersSheet);
 app.use("/api/wrapper", wrapper);
+
+// server static assets if in production
+if(process.env.NODE_ENV === 'production') {
+  // set static folder
+  app.use(express.static('client/build'));
+  // for any route that gets hit, we load the index.html build file 
+  app.get('*', (req, res) => {
+    res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'))
+  });
+
+}
 
 // server Config
 const port = 4000;
