@@ -1,11 +1,1 @@
-
-
-.vscode
-
-.DS_Store
-
 todo.txt
-
-/node_modules
-/package-lock.json
-/config/keys/dev.js
