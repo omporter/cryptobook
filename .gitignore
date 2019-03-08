@@ -1,9 +1,9 @@
 /node_modules
-\package-lock.json
-\config/keys/dev.js
+/package-lock.json
+/config/keys/dev.js
 
-\.vscode
+*.vscode
 
-\.DS_Store
+*.DS_Store
 
 todo.txt
