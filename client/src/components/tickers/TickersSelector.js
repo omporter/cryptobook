@@ -30,7 +30,7 @@ class TickersSelector extends Component {
       <div>
         <form onSubmit={this.onSubmit}>
           <input placeholder="ticker" onChange={this.onChange} />
-          <button>{this.state.ticker}</button>
+          <button>Load Data for {this.state.ticker}</button>
           <br />
           <br />
         </form>

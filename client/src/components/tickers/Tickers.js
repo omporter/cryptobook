@@ -9,17 +9,34 @@ import MethodSelector from "./MethodSelector";
 import TickersTableBuy from "./TickersTableBuy";
 import TickersTableSell from "./TickersTableSell";
 import TickersTableMatch from "./TickersTableMatch";
+import axios from "axios";
 
 class Tickers extends Component {
   constructor(props) {
     super(props);
     this.state = {
       ticker: "BTC",
-      uid: ''
+      uid: '',
+      dataExists: false
     };
     this.onTickerChange = this.onTickerChange.bind(this);
     this.refMethod = this.refMethod.bind(this);
     this.child = React.createRef();
+  }
+
+  componentDidMount() {
+    axios.get('http://localhost:4000/api/users/retrieve-user/' + this.props.auth.user.id)
+    .then(res => {
+      console.log('tickers res is', res)
+      if(res.data.liveTradesSheet) {
+        console.log('exists');
+        this.setState({dataExists: true});
+      } else {
+        console.log('not exists');
+        this.setState({dataExists: false});
+      }
+    })
+    .catch(err => console.log(err));
   }
 
   onTickerChange(data) {
@@ -36,15 +53,16 @@ class Tickers extends Component {
   }
 
   render() {
-    return (
-      <Router>
+    const dataDoesNotExist = (
+      <div>
         <div>
-          <TickersSelector
-            ticker={this.state.ticker}
-            changeParent={this.onTickerChange.bind(this)}
-            tickerSelectorSubmit={this.onTickerSelectorSubmit.bind(this)}
-          />
-          <MethodSelector />
+          Please click Add Trade to get started 
+        </div>
+      </div>
+    )
+
+    const dataDoesExist = (
+      <div>
           <Route
             exact
             path="/tickers"
@@ -64,6 +82,19 @@ class Tickers extends Component {
             path="/tickers/match"
             render={() => <TickersTableMatch ticker={this.state.ticker} ref={this.child} />}
           />
+      </div> 
+    )
+
+    return (
+      <Router>
+        <div>
+        <MethodSelector />
+          <TickersSelector
+            ticker={this.state.ticker}
+            changeParent={this.onTickerChange.bind(this)}
+            tickerSelectorSubmit={this.onTickerSelectorSubmit.bind(this)}
+          />
+          {this.state.dataExists ? dataDoesExist : dataDoesNotExist}
         </div>
       </Router>
     );

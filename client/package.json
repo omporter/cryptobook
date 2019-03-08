@@ -5,10 +5,12 @@
   "dependencies": {
     "axios": "^0.18.0",
     "canvasjs": "^1.8.1",
+    "chart.js": "^1.1.1",
     "jwt-decode": "^2.2.0",
     "react": "^16.6.3",
     "react-bootstrap": "^0.32.4",
     "react-bootstrap-table-next": "^1.4.2",
+    "react-chartjs": "^1.2.0",
     "react-dom": "^16.6.3",
     "react-redux": "^6.0.0",
     "react-router-dom": "^4.3.1",

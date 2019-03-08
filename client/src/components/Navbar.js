@@ -14,7 +14,8 @@ class Navbar extends Component {
 
 
   render() {
-    const { isAuthenticated, user } = this.props.auth;
+    // const { isAuthenticated, user } = this.props.auth;
+    const { isAuthenticated } = this.props.auth;
 
     const authLinks = (
       <ul className="navbar-nav ml-auto">
@@ -29,7 +30,7 @@ class Navbar extends Component {
         </li>
         <li className="nav-item">
           <a
-            href=""
+            href="/"
             onClick={this.onLogoutClick.bind(this)}
             className="nav-link"
           >
@@ -55,6 +56,43 @@ class Navbar extends Component {
       </ul>
     );
 
+    const authBar = (
+      <div className="collapse navbar-collapse" id="mobile-nav">
+      <ul className="navbar-nav mr-auto">
+        <li className="nav-item">
+          <Link className="nav-link" to="/portfolio">
+            {" "}
+            Portfolio
+          </Link>
+        </li>
+        <li className="nav-item">
+          <Link className="nav-link" to="/livetrades">
+            {" "}
+            Live Trades
+          </Link>
+        </li>
+        <li className="nav-item">
+          <Link className="nav-link" to="/closedtrades">
+            {" "}
+            Closed Trades
+          </Link>
+        </li>
+        <li className="nav-item">
+          <Link className="nav-link" to="/tickers">
+            {" "}
+            Tickers
+          </Link>
+        </li>
+        <li className="nav-item">
+          <Link className="nav-link" to="/addTrade">
+            {" "}
+            Add Trade
+          </Link>
+        </li>
+      </ul>
+    </div>
+    );
+
     return (
       <nav className="navbar navbar-expand-sm navbar-dark bg-dark mb-4">
         <div className="container">
@@ -70,45 +108,12 @@ class Navbar extends Component {
             <span className="navbar-toggler-icon" />
           </button>
 
-          <div className="collapse navbar-collapse" id="mobile-nav">
-            <ul className="navbar-nav mr-auto">
-              <li className="nav-item">
-                <Link className="nav-link" to="/portfolio">
-                  {" "}
-                  Portfolio
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" to="/livetrades">
-                  {" "}
-                  Live Trades
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" to="/closedtrades">
-                  {" "}
-                  Closed Trades
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" to="/tickers">
-                  {" "}
-                  Tickers
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" to="/addTrade">
-                  {" "}
-                  Add Trade
-                </Link>
-              </li>
-            </ul>
+            {isAuthenticated ? authBar : null} 
 
             {isAuthenticated ? authLinks : guestLinks} 
             {/* where isAuthenticated comes from our state.auth */}
 
           </div>
-        </div>
       </nav>
     );
   }

@@ -255,7 +255,7 @@ class AddTrade extends Component {
         exchange: tickerData['exchange'],
         notes : tickerData['notes']
       };
-    const url = "http://localhost:4000/api/tickersSheet/update-tickers-sheet/" + this.state.ticker + 'Match' + "/" + this.state.uid;
+    const url = "http://localhost:4000/api/tickersSheet/update-tickers-sheet/" + this.state.ticker + 'Match/' + this.state.uid;
     return axios.put(url, tickerMatchData)
   };
   nextMatchId = (dbdata, tickerData) => {
@@ -339,7 +339,7 @@ class AddTrade extends Component {
           let location = this.state.ticker + "Buy";
           let tickerHistory = res1.data[location];
           if (tickerHistory === undefined) { // if first time adding ticker, must manually use original tickerData variable from step 1.
-            console.log("tickerHistory reassigned to original tickerData object");
+            // console.log("tickerHistory reassigned to original tickerData object");
             tickerHistory = [];
             tickerHistory.push(tickerData);
           }
@@ -364,6 +364,7 @@ class AddTrade extends Component {
           let liveValueUsd = liveSheetsData["LiveValueUsd"] = Number(amount) * Number(this.state.wrapperPriceUsd);
           liveSheetsData['unrealisedProfitLossBtc'] = liveValueBtc - totalCostBtc;
           liveSheetsData['unrealisedProfitLossUsd'] = liveValueUsd - totalCostUsd;
+          liveSheetsData['mostRecentBuyDate'] = mostRecentBuyDate;
           // liveSheetsData["mostRecentBuyDate"] = Math.max.apply(Math, mostRecentBuyDate); // where largest is most recent
           let isNewTickerInLiveTradesAlready = false; // if new just push, else must delete existing record then create new one
           if (!(res1.data.liveTradesSheet === undefined)) {
@@ -375,19 +376,19 @@ class AddTrade extends Component {
           }
           if (isNewTickerInLiveTradesAlready === false) { // just push to live trades sheet
             url = "http://localhost:4000/api/liveTradesSheet/update-live-trades-sheet/" + uid;
-            console.log("First Instance of Ticker in Live Trades. Creating New Object");
+            // console.log("First Instance of Ticker in Live Trades. Creating New Object");
             axios.put(url, liveSheetsData)
               .then(res3 =>console.log("Data successfully appended to Live Trades Sheet", res3.data))
               .catch(err => console.log({ err: err }));
           } else {
             // if ticker exists already, must delete existing instance and create new one
-            console.log("Ticker Already Exists. Deleting Existing Record of Ticker in Live Trades Then Updating.");
-            const localMethod = this.state.ticker + "Buy";
+            // console.log("Ticker Already Exists. Deleting Existing Record of Ticker in Live Trades Then Updating.");
+            // const localMethod = this.state.ticker + "Buy";
             // step2.1: delete existing record.
             url ="http://localhost:4000/api/liveTradesSheet/delete-live-trades-sheet/" + uid + "/" + this.state.ticker;
             axios.patch(url)
               .then(res3 => {
-                let mostRecentBuyDate = []; // make array of buy dates so we can find the largest (most recent one)
+                // let mostRecentBuyDate = []; // make array of buy dates so we can find the largest (most recent one)
                 let updatedAmount = liveSheetsData["Amount"]  = historicAmountsTotal + Number(this.state.amount);
                 let updatedTotalCostBtc = liveSheetsData["totalCostBtc"] = totalCostBtc + (Number(this.state.amount) * this.state.priceBtc);
                 let updatedTotalCostUsd = liveSheetsData["totalCostUsd"] = totalCostUsd + (Number(this.state.amount) * this.state.priceUsd);
@@ -470,6 +471,7 @@ class AddTrade extends Component {
         } else {
           console.log('Oops, button is neither buy or sell');
         }
+        this.props.history.push('/dashboard');
       })
       .catch(err => console.log({err: err}));
     })

@@ -4,7 +4,7 @@ import axios from "axios";
 import PropTypes from "prop-types";
 import { connect } from "react-redux";
 
-import PieChart from './piechart';
+// import PieChart from './piechart';
 import Pie from "./piechart";
 
 
@@ -109,6 +109,7 @@ class Dashboard extends Component {
                         url = "http://localhost:4000/api/portfolioSheet/update-portfolio-sheet/" + uid;
                         axios.put(url, portfolioSheetData)
                           .then(res6 => {
+                            this.props.history.push('/portfolio');
                             console.log('All Tasks Complete', res6);
                           })
                           .catch(err6 => console.log({ err6: err6 }));
@@ -127,21 +128,12 @@ class Dashboard extends Component {
   render() {
     return (
       <div>
-        <h1> Dashboard</h1>
         <button
           type="button"
           className="btn btn-outline-success btn-lg"
           onClick={this.refreshPrices}
         >
           Refresh Prices
-        </button>
-
-        <button
-          type="button"
-          className="btn btn-outline-success btn-lg"
-          onClick={this.testMethod}
-        >
-          Test Button
         </button>
 
 

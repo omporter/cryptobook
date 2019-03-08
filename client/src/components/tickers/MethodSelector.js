@@ -10,22 +10,22 @@ class MethodSelector extends Component {
             className="btn btn-outline-success btn-lg"
             to={{pathname: "/tickers/buy"}}
           >
-            Buys
+            Buy Trades
           </Link>
           <Link
             type="button"
             className="btn btn-outline-danger btn-lg"
             to="/tickers/sell"
           >
-            Sells
+            Sell Trades
           </Link>
-          <Link
+          {/* <Link
             type="button"
             className="btn btn-outline-info btn-lg"
             to="/tickers/match"
           >
             Match
-          </Link>
+          </Link> */}
           <br /> <br />
       </div>
     );

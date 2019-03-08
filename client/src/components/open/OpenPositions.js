@@ -9,7 +9,8 @@ const axios = require("axios");
 class OpenPositions extends Component {
   state = {
     openPositionsData: [],
-    uid: ''
+    uid: '',
+    noData: true
   };
 
 
@@ -17,8 +18,16 @@ class OpenPositions extends Component {
     const uid = this.props.auth.user.id;
     this.setState({uid: uid})
     axios.get("http://localhost:4000/api/liveTradesSheet/retrieve-live-trades-sheet/" + uid)
-      .then(res => { this.setState(  { openPositionsData: res.data.liveTradesSheet })})
-      .catch(error => {console.log({'error': error});});
+      .then(res => { 
+        if(!res.data.liveTradesSheet) {
+          this.props.history.push('/addTrade')
+        }
+        this.setState(  { openPositionsData: res.data.liveTradesSheet })
+        this.setState({noData: false})
+      })
+      .catch(error => {
+        this.setState({noData: true})
+      });
 }
 
   render() {
@@ -100,11 +109,22 @@ class OpenPositions extends Component {
         text: "Notes"
       }
     ];
+
+    const mainTable = (
+      <div className="scroll-style">
+      <BootstrapTable keyField="ID" data={this.state.openPositionsData} columns={columns} striped />
+    </div>
+    )
+
+    const pleaseAddTrade = (
+      <div>
+        <p> Please add trade to see your live trades. </p>
+      </div>
+    )
+
     return (
       <div>
-        <div className="scroll-style">
-          <BootstrapTable keyField="ID" data={this.state.openPositionsData} columns={columns} striped />
-        </div>
+        { this.state.noData ? pleaseAddTrade : mainTable }
       </div>
     );
   }
